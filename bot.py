@@ -47,7 +47,7 @@ def ll_gen(ctx, queues):
         with torch.no_grad():
             out = model.generate(history, token_count=token_count, temperature=temperature, top_p=top_p)
         
-        resp = out[len(history)+1:]
+        resp = out[len(history):]
         resp_clean = resp[:resp.find('Robert:')-1]
         history += resp_clean
 
@@ -82,7 +82,7 @@ async def reply(ctx, prompt, token_count=200, temperature=0.8, top_p=0.95):
         loop = asyncio.get_running_loop()
         que(ctx, user_input)
         reaction_list = [':thumbsup:', ':laughing:', ':wink:', ':heart:', ':pray:', ':100:', ':sloth:', ':snake:']
-        reaction_choice = reaction_list[random.randrange(10)]
+        reaction_choice = reaction_list[random.randrange(8)]
         await ctx.send(f'{reaction_choice} {ctx.message.author.mention}')
         if blocking:
             print('this is blocking')

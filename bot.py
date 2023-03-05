@@ -97,7 +97,6 @@ async def reset(ctx, initial_prompt=preset_history):
 
 @client.hybrid_command()
 async def status(ctx):
-
     total_num_queued_jobs = len(queues)
     que_user_ids = [list(a.keys())[0] for a in queues]
     if ctx.message.author.mention in que_user_ids:

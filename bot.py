@@ -31,7 +31,7 @@ async def on_ready():
     print("bot ready")
     await client.tree.sync()
 
-def ll_gen(ctx, queues):
+async def ll_gen(ctx, queues):
     global blocking
 
     print(queues)
@@ -45,12 +45,20 @@ def ll_gen(ctx, queues):
         user_input["context"] = prompt
         user_input["check"] = True
         
-        *_, last_resp = chatbot_wrapper(**user_input)
-        resp_clean = last_resp[len(last_resp)-1][1]
-
-        msg_to_user = f'\n{mention}: {user_input["text"]}\n{person_2}: {resp_clean}'
-        asyncio.run_coroutine_threadsafe(ctx.send(msg_to_user), loop)
-        ll_gen(ctx, queues)
+        msg = None
+        last_resp = ""
+        for resp in chatbot_wrapper(**user_input):
+            resp_clean = resp[len(resp)-1][1]
+            last_resp = f'\n{mention}: {user_input["text"]}\n{person_2}: {resp_clean}'
+            msg_to_user = last_resp + ":arrows_counterclockwise:"
+            
+            if msg:
+                await msg.edit(content=msg_to_user)
+            elif resp_clean != "":
+                msg = await ctx.send(msg_to_user)
+        
+        await msg.edit(content=last_resp)
+        await ll_gen(ctx, queues)
     else:
         blocking = False        
 
@@ -96,7 +104,7 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
         if blocking:
             print("this is blocking")
         else:
-            await asyncio.gather(asyncio.to_thread(ll_gen,ctx,queues))
+            await ll_gen(ctx, queues)
 
 @client.hybrid_command()
 async def reset(ctx, prompt_new=prompt):

@@ -1,18 +1,65 @@
-import discord
-from discord.ext import commands
+from datetime import datetime, timedelta
 import asyncio
 import random
+import logging
+import discord
+from discord.ext import commands
 import torch
 
-import modules.shared as shared
+from modules import shared
 from modules.models import load_model
 from modules.chat import chatbot_wrapper, clear_chat_log
 
 TOKEN = "<token here>"
 
 prompt = "This is a conversation between two people."
-person_1 = "Person 1"
-person_2 = "Person 2"
+your_name = "Person 1"
+llamas_name = "Person 2"
+
+reply_embed_json = {
+    "title": "Reply #X",
+    "color": 39129,
+    "timestamp": (datetime.now() - timedelta(hours=3)).isoformat(),
+    "url": "https://github.com/xNul/chat-llama-discord-bot",
+    "footer": {
+        "text": "Contribute to ChatLLaMA on GitHub!",
+    },
+    "fields": [
+        {
+            "name": your_name,
+            "value": ""
+        },
+        {
+            "name": llamas_name,
+            "value": ""
+        }
+    ]
+}
+reply_embed = discord.Embed().from_dict(reply_embed_json)
+
+reset_embed_json = {
+    "title": "Conversation has been reset",
+    "description": "Replies: 0\nYour name: " + your_name + "\nLLaMA's name: " + llamas_name + "\nPrompt: " + prompt,
+    "color": 39129,
+    "timestamp": (datetime.now() - timedelta(hours=3)).isoformat(),
+    "url": "https://github.com/xNul/chat-llama-discord-bot",
+    "footer": {
+        "text": "Contribute to ChatLLaMA on GitHub!"
+    }
+}
+reset_embed = discord.Embed().from_dict(reset_embed_json)
+
+status_embed_json = {
+    "title": "Status",
+    "description": "You don't have a job queued.",
+    "color": 39129,
+    "timestamp": (datetime.now() - timedelta(hours=3)).isoformat(),
+    "url": "https://github.com/xNul/chat-llama-discord-bot",
+    "footer": {
+        "text": "Contribute to ChatLLaMA on GitHub!"
+    }
+}
+status_embed = discord.Embed().from_dict(status_embed_json)
 
 shared.args.chat = True
 shared.model_name = shared.args.model
@@ -25,47 +72,56 @@ client = commands.Bot(command_prefix=".", intents=intents)
 queues = []
 blocking = False
 loop = None
+reply_count = 0
 
 @client.event
 async def on_ready():
-    print("bot ready")
+    logging.info("bot ready")
     await client.tree.sync()
 
 async def ll_gen(ctx, queues):
     global blocking
+    global reply_count
 
-    print(queues)
     if len(queues) > 0:
         blocking = True
+        reply_count += 1
         user_input = queues.pop(0)
         mention = list(user_input.keys())[0]
         user_input = user_input[mention]
-        user_input["name1"] = person_1
-        user_input["name2"] = person_2
+        user_input["name1"] = your_name
+        user_input["name2"] = llamas_name
         user_input["context"] = prompt
         user_input["check"] = True
+        
+        reply_embed.set_field_at(index=0, name=your_name, value=user_input["text"], inline=False)
+        reply_embed.title = "Reply #" + str(reply_count)
+        reply_embed.timestamp = datetime.now() - timedelta(hours=3)
         
         msg = None
         last_resp = ""
         for resp in chatbot_wrapper(**user_input):
             resp_clean = resp[len(resp)-1][1]
-            last_resp = f'\n{mention}: {user_input["text"]}\n{person_2}: {resp_clean}'
+            last_resp = resp_clean
             msg_to_user = last_resp + ":arrows_counterclockwise:"
+            reply_embed.set_field_at(index=1, name=llamas_name, value=msg_to_user, inline=False)
             
             if msg:
-                await msg.edit(content=msg_to_user)
+                await msg.edit(embed=reply_embed)
             elif resp_clean != "":
-                msg = await ctx.send(msg_to_user)
+                msg = await ctx.send(embed=reply_embed)
         
-        await msg.edit(content=last_resp)
+        logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
+        reply_embed.set_field_at(index=1, name=llamas_name, value=last_resp, inline=False)
+        await msg.edit(embed=reply_embed)
         await ll_gen(ctx, queues)
     else:
-        blocking = False        
+        blocking = False
 
 def que(ctx, user_input):
     user_id = ctx.message.author.mention
     queues.append({user_id:user_input})
-    print(f'{user_input} added to queue')
+    logging.info(f'reply requested: "{user_id}: {user_input}"')
 
 def check_num_in_que(ctx):
     user = ctx.message.author.mention
@@ -102,40 +158,41 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
         reaction_choice = reaction_list[random.randrange(8)]
         await ctx.send(f'{ctx.message.author.mention} {reaction_choice} Processing reply...')
         if blocking:
-            print("this is blocking")
+            logging.warning("reply blocking")
         else:
             await ll_gen(ctx, queues)
 
 @client.hybrid_command()
-async def reset(ctx, prompt_new=prompt):
+async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new=llamas_name):
     global prompt
+    global your_name
+    global llamas_name
+    global reply_count
+    
     prompt = prompt_new
-    clear_chat_log(person_1, person_2)
-    await ctx.send(f'Conversation has been reset and the initial prompt is now: {prompt}\n\nNote: In order for the conversation to be handled properly, it must follow the format of:\n{person_1}: <{person_1}\'s response>\n{person_2}: <{person_2}\' response>')
-
-@client.hybrid_command()
-async def change_names(ctx, person_1_new=person_1, person_2_new=person_2):
-    global person_1
-    global person_2
-    person_1 = person_1_new
-    person_2 = person_2_new
-    await ctx.send(f'Names have been changed to "{person_1}" and "{person_2}"')
+    your_name = your_name_new
+    llamas_name = llamas_name_new
+    reply_count = 0
+    
+    clear_chat_log(your_name, llamas_name)
+    
+    logging.info("conversation reset: {'replies': " + str(reply_count) + ", 'your_name': '" + your_name + "', 'llamas_name': '" + llamas_name + "', 'prompt': '" + prompt + "'}")
+    reset_embed.timestamp = datetime.now() - timedelta(hours=3)
+    reset_embed.description = "Replies: " + str(reply_count) + "\nYour name: " + your_name + "\nLLaMA's name: " + llamas_name + "\nPrompt: " + prompt
+    await ctx.send(embed=reset_embed)
 
 @client.hybrid_command()
 async def status(ctx):
     total_num_queued_jobs = len(queues)
     que_user_ids = [list(a.keys())[0] for a in queues]
     if ctx.message.author.mention in que_user_ids:
-        user_position = que_user_ids.index(ctx.message.author.mention)
-        msg = f'{ctx.message.author.mention} Your job is currently {user_position}/{total_num_queued_jobs} in queue. Estimated time until response is ready: {user_position * 30/60} minutes.'
+        user_position = que_user_ids.index(ctx.message.author.mention)+1
+        msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 3/60} minutes.'
     else:
-        msg = f'{ctx.message.author.mention} you don\'t have a job queued.'
+        msg = f'{ctx.message.author.mention} You don\'t have a job queued.'
 
-    await ctx.send(msg)
+    status_embed.timestamp = datetime.now() - timedelta(hours=3)
+    status_embed.description = msg
+    await ctx.send(embed=status_embed)
 
-@client.hybrid_command()
-async def showqueue(ctx):
-    await ctx.send(queues)
-    print(queues)
-
-client.run(TOKEN)
+client.run(TOKEN, root_logger=True)

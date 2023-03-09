@@ -4,6 +4,7 @@ import random
 import logging
 import discord
 from discord.ext import commands
+from discord import app_commands
 import torch
 
 from modules import shared
@@ -128,7 +129,8 @@ def check_num_in_que(ctx):
     user_list_in_que = [list(i.keys())[0] for i in queues]
     return user_list_in_que.count(user)
 
-@client.hybrid_command()
+@client.hybrid_command(description="Reply to LLaMA")
+@app_commands.describe(text="Text")
 async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99, top_p=0.18, typical_p=1, repetition_penalty=1.15, top_k=30, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, chat_prompt_size=2048, chat_generation_attempts=1):
     user_input = {"text": text,
                   "max_new_tokens": max_new_tokens,
@@ -162,7 +164,12 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
         else:
             await ll_gen(ctx, queues)
 
-@client.hybrid_command()
+@client.hybrid_command(description="Reset the conversation with LLaMA")
+@app_commands.describe(
+    prompt_new="The initial prompt to contextualize LLaMA",
+    your_name_new="The name which all users speak as",
+    llamas_name_new="The name which LLaMA speaks as"
+)
 async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new=llamas_name):
     global prompt
     global your_name
@@ -181,7 +188,7 @@ async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new
     reset_embed.description = "Replies: " + str(reply_count) + "\nYour name: " + your_name + "\nLLaMA's name: " + llamas_name + "\nPrompt: " + prompt
     await ctx.send(embed=reset_embed)
 
-@client.hybrid_command()
+@client.hybrid_command(description="Check the status of your reply queue position and wait time")
 async def status(ctx):
     total_num_queued_jobs = len(queues)
     que_user_ids = [list(a.keys())[0] for a in queues]
@@ -189,7 +196,7 @@ async def status(ctx):
         user_position = que_user_ids.index(ctx.message.author.mention)+1
         msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 3/60} minutes.'
     else:
-        msg = f'{ctx.message.author.mention} You don\'t have a job queued.'
+        msg = f'{ctx.message.author.mention} doesn\'t have a job queued.'
 
     status_embed.timestamp = datetime.now() - timedelta(hours=3)
     status_embed.description = msg

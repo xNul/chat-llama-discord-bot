@@ -1,6 +1,12 @@
 # ChatLLaMA Discord Bot
 
-A Discord Bot for chatting with LLaMA. Does not include RLHF, but LLaMA is pretty impressive on its own. Use `/reply` to prompt LLaMA. To clear chat history with LLaMA or change the initial prompt, use `/reset`. Oftentimes LLaMA will get stuck in a loop or you will want to change the initial prompt to something more interesting so `/reset` is well used.
+A Discord Bot for chatting with LLaMA. Does not include RLHF, but LLaMA is pretty impressive on its own. Use `/reply` to talk to LLaMA. To clear chat history with LLaMA or change the initial prompt, use `/reset`. Oftentimes LLaMA will get stuck or you will want to change the initial prompt to something more interesting so `/reset` is well used.
+
+<div align="center">
+  <video src="https://user-images.githubusercontent.com/894305/223963813-18e58d3c-4f9b-479c-8cdb-a2ad0df935c3.mp4" width=400/>
+</div>
+
+# Setup
 
 1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information [here](https://github.com/oobabooga/text-generation-webui/issues/147))
 

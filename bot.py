@@ -131,7 +131,7 @@ def check_num_in_que(ctx):
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Text")
-async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99, top_p=0.18, typical_p=1, repetition_penalty=1.15, top_k=30, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, chat_prompt_size=2048, chat_generation_attempts=1):
+async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99, top_p=0.18, typical_p=1, repetition_penalty=1.15, encoder_repetition_penalty=1, top_k=30, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, chat_prompt_size=2048, chat_generation_attempts=1, regenerate=False):
     user_input = {"text": text,
                   "max_new_tokens": max_new_tokens,
                   "do_sample": do_sample,
@@ -139,6 +139,7 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
                   "top_p": top_p,
                   "typical_p": typical_p,
                   "repetition_penalty": repetition_penalty,
+                  "encoder_repetition_penalty": encoder_repetition_penalty,
                   "top_k": top_k,
                   "min_length": min_length,
                   "no_repeat_ngram_size": no_repeat_ngram_size,
@@ -147,7 +148,8 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
                   "length_penalty": length_penalty,
                   "early_stopping": early_stopping,
                   "chat_prompt_size": chat_prompt_size,
-                  "chat_generation_attempts": chat_generation_attempts}
+                  "chat_generation_attempts": chat_generation_attempts,
+                  "regenerate": regenerate}
 
     num = check_num_in_que(ctx)
     if num >=10:

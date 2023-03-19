@@ -8,7 +8,7 @@ A Discord Bot for chatting with LLaMA. Does not include RLHF, but LLaMA is prett
 
 # Setup
 
-1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information [here](https://github.com/oobabooga/text-generation-webui/issues/147))
+1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information below)
 
 2. Edit `bot.py` with your Discord bot's token
 
@@ -47,3 +47,57 @@ James:  The circumference of the Earth is 24,901 miles.
 Robert: Ahhh very good to know. These days, the world feels like it's getting smaller and smaller with the internet!
 James:  Indeed! It is crazy to think about how the world has grown to be so small in recent years.
 ```
+
+# LLaMA Setup (normal/8bit/4bit) for `text-generation-webui`
+
+These instructions worked for me on Windows and I believe they'll work for Linux users too. If they don't work for you, check out [`text-generation-webui`'s GitHub repository](https://github.com/oobabooga/text-generation-webui) for installation instructions.
+
+### Normal & 8bit LLaMA Setup
+
+1. Install Anaconda
+2. **Windows only**: Install Git for Windows
+3. Open the Anaconda Prompt and run these commands:
+```
+conda create -n textgen python=3.10.9
+conda activate textgen
+pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+git clone https://github.com/oobabooga/text-generation-webui
+cd text-generation-webui
+pip install -r requirements.txt
+```
+4. **Windows only**: Follow the instructions [here](https://github.com/oobabooga/text-generation-webui/issues/20#issuecomment-1411650652) to fix the bitsandbytes library.
+5. **Linux only**: Follow the instructions [here](https://github.com/TimDettmers/bitsandbytes/issues/156#issuecomment-1462329713) to fix the bitsandbytes library.
+
+### 4bit LLaMA Setup
+
+Run these commands:
+```
+conda install -c conda-forge cudatoolkit-dev
+mkdir repositories
+cd repositories
+git clone https://github.com/qwopqwop200/GPTQ-for-LLaMa
+cd GPTQ-for-LLaMa
+python setup_cuda.py install
+```
+
+Note: The last command is compiling C++ files for Nvidia's CUDA compiler so it needs a C++ compiler and Nvidia's CUDA compiler. If the last command didn't work and you don't have a C++ compiler installed, follow these instructions and try again:
+- **Windows only**: Install Build Tools for Visual Studio 2019 (has to be 2019) [here](https://learn.microsoft.com/en-us/visualstudio/releases/2019/history#release-dates-and-build-numbers), remember to checkmark "Desktop development with C++", and add the `cl` compiler to the environment.
+- **Linux only**: Run the command `sudo apt install build-essential`.
+
+### Downloading LLaMA Models
+
+1. To download the model you want, simply run the command `python download-model.py decapoda-research/llama-Xb-hf` where `X` is the size of the model you want to download like `7` or `13`.
+2. Once downloaded, you have to fix the outdated config of the model. Open `models/llama-Xb-hf/tokenizer_config.json` and change `LLaMATokenizer` to `LlamaTokenizer`.
+3. If you only want to run a normal or 8bit model, you're done. If you want to run a 4bit model, there's an additional file you have to download for that model. There is no central location for all of these files at the moment. 7B can be found [here](https://huggingface.co/decapoda-research/llama-7b-hf-int4/resolve/main/llama-7b-4bit.pt). 13B can be found [here](https://huggingface.co/decapoda-research/llama-13b-hf-int4/resolve/main/llama-13b-4bit.pt). 30B can be found [here](https://drive.google.com/file/d/1SZXF3BZ7e2r-tJpSpCJrk8pTukuKTvTS/view?usp=sharing). [This one](https://huggingface.co/maderix/llama-65b-4bit/resolve/main/llama65b-4bit.pt) might work for 65B.
+4. Once downloaded, move the `.pt` file into `model/llama-Xb-hf` and you should be done.
+
+### Running the LLaMA Models
+
+##### Normal LLaMA Model
+`python server.py --model llama-Xb-hf`
+
+##### 8bit LLaMA Model
+`python server.py --model llama-Xb-hf --load-in-8bit`
+
+##### 4bit LLaMA Model
+`python server.py --model llama-Xb-hf --gptq-bits 4`

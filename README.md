@@ -8,7 +8,7 @@ A Discord Bot for chatting with LLaMA. Does not include RLHF, but LLaMA is prett
 
 # Setup
 
-1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information [below](https://github.com/xNul/chat-llama-discord-bot#llama-setup-normal8bit4bit-for-text-generation-webui))
+1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information [below](#llama-setup-normal8bit4bit-for-text-generation-webui))
 
 2. Edit `bot.py` with your Discord bot's token
 

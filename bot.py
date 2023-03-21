@@ -10,6 +10,7 @@ import torch
 from modules import shared
 from modules.models import load_model
 from modules.chat import chatbot_wrapper, clear_chat_log
+from modules.LoRA import add_lora_to_model
 
 TOKEN = "<token here>"
 
@@ -65,6 +66,10 @@ status_embed = discord.Embed().from_dict(status_embed_json)
 shared.args.chat = True
 shared.model_name = shared.args.model
 shared.model, shared.tokenizer = load_model(shared.model_name)
+
+if shared.args.lora:
+    shared.lora_name = shared.args.lora
+    add_lora_to_model(shared.lora_name)
 
 intents = discord.Intents.default()
 intents.message_content = True

@@ -50,7 +50,7 @@ James:  Indeed! It is crazy to think about how the world has grown to be so smal
 
 # LLaMA Setup (normal/8bit/4bit) for `text-generation-webui`
 
-These instructions worked for me on Windows and I believe they'll work for Linux users too. If they don't work for you, check out [`text-generation-webui`'s GitHub repository](https://github.com/oobabooga/text-generation-webui) for installation instructions.
+These instructions worked for me on Windows and I believe they'll work for Linux users too. I don't think these instructions will work on WSL. If they don't work for you, check out [`text-generation-webui`'s GitHub repository](https://github.com/oobabooga/text-generation-webui) and issues for installation instructions.
 
 ### Normal & 8bit LLaMA Setup
 
@@ -82,7 +82,7 @@ python setup_cuda.py install
 ```
 
 Note: The last command is compiling C++ files for Nvidia's CUDA compiler so it needs a C++ compiler and Nvidia's CUDA compiler. If the last command didn't work and you don't have a C++ compiler installed, follow these instructions and try again:
-- **Windows only**: Install Build Tools for Visual Studio 2019 (has to be 2019) [here](https://learn.microsoft.com/en-us/visualstudio/releases/2019/history#release-dates-and-build-numbers), remember to checkmark "Desktop development with C++", and add the `cl` compiler to the environment.
+- **Windows only**: Install Build Tools for Visual Studio 2019 [here](https://learn.microsoft.com/en-us/visualstudio/releases/2019/history#release-dates-and-build-numbers), remember to checkmark "Desktop development with C++", and add the `cl` compiler to the environment.
 - **Linux only**: Run the command `sudo apt install build-essential`.
 
 ### Downloading LLaMA Models

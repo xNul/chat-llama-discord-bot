@@ -10,11 +10,13 @@ A Discord Bot for chatting with LLaMA. Does not include RLHF, but LLaMA is prett
 
 1. Get LLaMA setup and working with https://github.com/oobabooga/text-generation-webui (more information [below](#llama-setup-normal8bit4bit-for-text-generation-webui))
 
-2. Edit `bot.py` with your Discord bot's token
+2. Install discord.py with `pip install discord`
 
-3. Place `bot.py` inside the root of the text-generation-webui directory
+3. Edit `bot.py` with your Discord bot's token
 
-4. Run `python bot.py --model <LLaMA model>`
+4. Place `bot.py` inside the root of the text-generation-webui directory
+
+5. Run with `python bot.py --model <LLaMA model>`
 
 Note: For ease of use, `bot.py` supports all `server.py` model-related command line arguments.
 

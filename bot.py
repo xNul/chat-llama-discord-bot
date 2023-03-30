@@ -7,10 +7,11 @@ from discord.ext import commands
 from discord import app_commands
 import torch
 
-from modules import shared
-from modules.models import load_model
 from modules.chat import chatbot_wrapper, clear_chat_log
+from modules import shared
+shared.args.cai_chat = True
 from modules.LoRA import add_lora_to_model
+from modules.models import load_model
 
 TOKEN = "<token here>"
 
@@ -63,7 +64,6 @@ status_embed_json = {
 }
 status_embed = discord.Embed().from_dict(status_embed_json)
 
-shared.args.chat = True
 shared.model_name = shared.args.model
 shared.model, shared.tokenizer = load_model(shared.model_name)
 
@@ -97,7 +97,7 @@ async def ll_gen(ctx, queues):
         user_input["name1"] = your_name
         user_input["name2"] = llamas_name
         user_input["context"] = prompt
-        user_input["check"] = True
+        user_input["check"] = False
         
         # Prevents the embed character limit error
         embed_user_input_text = user_input["text"]

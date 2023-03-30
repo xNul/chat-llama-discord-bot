@@ -99,7 +99,11 @@ async def ll_gen(ctx, queues):
         user_input["context"] = prompt
         user_input["check"] = True
         
-        reply_embed.set_field_at(index=0, name=your_name, value=user_input["text"], inline=False)
+        # Prevents the embed character limit error
+        if len(user_input["text"]) > 1024:
+            embed_user_input_text = user_input["text"][:1021] + "..."
+        
+        reply_embed.set_field_at(index=0, name=your_name, value=embed_user_input_text, inline=False)
         reply_embed.title = "Reply #" + str(reply_count)
         reply_embed.timestamp = datetime.now() - timedelta(hours=3)
         

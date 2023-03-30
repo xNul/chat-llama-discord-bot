@@ -87,6 +87,8 @@ Note: The last command is compiling C++ files for Nvidia's CUDA compiler so it n
 - **Windows only**: Install Build Tools for Visual Studio 2019 [here](https://learn.microsoft.com/en-us/visualstudio/releases/2019/history#release-dates-and-build-numbers), remember to checkmark "Desktop development with C++", and add the `cl` compiler to the environment.
 - **Linux only**: Run the command `sudo apt install build-essential`.
 
+Finally, open `modules/GPTQ_loader.py` and replace the line `make_quant(model, layers, wbits, groupsize, faster=faster_kernel, kernel_switch_threshold=kernel_switch_threshold)` with `make_quant(model, layers, wbits)`.
+
 ### Downloading LLaMA Models
 
 1. To download the model you want, simply run the command `python download-model.py decapoda-research/llama-Xb-hf` where `X` is the size of the model you want to download like `7` or `13`.
@@ -103,4 +105,4 @@ Note: The last command is compiling C++ files for Nvidia's CUDA compiler so it n
 `python server.py --model llama-Xb-hf --load-in-8bit`
 
 ##### 4bit LLaMA Model
-`python server.py --model llama-Xb-hf --gptq-bits 4`
+`python server.py --model llama-Xb-hf --wbits 4`

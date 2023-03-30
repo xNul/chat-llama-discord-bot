@@ -68,8 +68,7 @@ shared.model_name = shared.args.model
 shared.model, shared.tokenizer = load_model(shared.model_name)
 
 if shared.args.lora:
-    shared.lora_name = shared.args.lora
-    add_lora_to_model(shared.lora_name)
+    add_lora_to_model(shared.args.lora)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -189,6 +188,7 @@ async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new
     llamas_name = llamas_name_new
     reply_count = 0
     
+    shared.stop_everything = True
     clear_chat_log(your_name, llamas_name)
     
     logging.info("conversation reset: {'replies': " + str(reply_count) + ", 'your_name': '" + your_name + "', 'llamas_name': '" + llamas_name + "', 'prompt': '" + prompt + "'}")

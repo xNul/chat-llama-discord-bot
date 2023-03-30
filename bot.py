@@ -33,7 +33,7 @@ reply_embed_json = {
         },
         {
             "name": llamas_name,
-            "value": ""
+            "value": ":arrows_counterclockwise:"
         }
     ]
 }
@@ -100,6 +100,7 @@ async def ll_gen(ctx, queues):
         user_input["check"] = True
         
         # Prevents the embed character limit error
+        embed_user_input_text = user_input["text"]
         if len(user_input["text"]) > 1024:
             embed_user_input_text = user_input["text"][:1021] + "..."
         
@@ -107,18 +108,20 @@ async def ll_gen(ctx, queues):
         reply_embed.title = "Reply #" + str(reply_count)
         reply_embed.timestamp = datetime.now() - timedelta(hours=3)
         
-        msg = None
+        msg = await ctx.send(embed=reply_embed)
         last_resp = ""
         for resp in chatbot_wrapper(**user_input):
             resp_clean = resp[len(resp)-1][1]
             last_resp = resp_clean
             msg_to_user = last_resp + ":arrows_counterclockwise:"
-            reply_embed.set_field_at(index=1, name=llamas_name, value=msg_to_user, inline=False)
             
-            if msg:
-                await msg.edit(embed=reply_embed)
-            elif resp_clean != "":
-                msg = await ctx.send(embed=reply_embed)
+            # Prevents the embed character limit error
+            if len(last_resp) > 1024:
+                last_resp = last_resp[:1024]
+                break
+            
+            reply_embed.set_field_at(index=1, name=llamas_name, value=msg_to_user, inline=False)
+            await msg.edit(embed=reply_embed)
         
         logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
         reply_embed.set_field_at(index=1, name=llamas_name, value=last_resp, inline=False)

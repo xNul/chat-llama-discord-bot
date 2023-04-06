@@ -76,15 +76,9 @@ client = commands.Bot(command_prefix=".", intents=intents)
 
 queues = []
 blocking = False
-loop = None
 reply_count = 0
 
-@client.event
-async def on_ready():
-    logging.info("bot ready")
-    await client.tree.sync()
-
-async def ll_gen(ctx, queues):
+async def llm_gen(ctx, queues):
     global blocking
     global reply_count
 
@@ -123,19 +117,14 @@ async def ll_gen(ctx, queues):
         logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
         reply_embed.set_field_at(index=1, name=user_input["name2"], value=last_resp, inline=False)
         await msg.edit(embed=reply_embed)
-        await ll_gen(ctx, queues)
+        await llm_gen(ctx, queues)
     else:
         blocking = False
 
-def que(ctx, user_input):
-    user_id = ctx.message.author.mention
-    queues.append({user_id:user_input})
-    logging.info(f'reply requested: "{user_id}: {user_input}"')
-
-def check_num_in_que(ctx):
-    user = ctx.message.author.mention
-    user_list_in_que = [list(i.keys())[0] for i in queues]
-    return user_list_in_que.count(user)
+@client.event
+async def on_ready():
+    logging.info("bot ready")
+    await client.tree.sync()
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
@@ -147,46 +136,46 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=0.7, 
     if context is None:
         context = prompt
     
-    user_input = {"text": text,
-                  "generate_state": {"max_new_tokens": max_new_tokens,
-                                    "do_sample": do_sample,
-                                    "temperature": temperature,
-                                    "top_p": top_p,
-                                    "typical_p": typical_p,
-                                    "repetition_penalty": repetition_penalty,
-                                    "encoder_repetition_penalty": encoder_repetition_penalty,
-                                    "top_k": top_k,
-                                    "min_length": min_length,
-                                    "no_repeat_ngram_size": no_repeat_ngram_size,
-                                    "num_beams": num_beams,
-                                    "penalty_alpha": penalty_alpha,
-                                    "length_penalty": length_penalty,
-                                    "early_stopping": early_stopping,
-                                    "seed": seed,
-                                    "stop_at_newline": stop_at_newline,
-                                    "chat_prompt_size": chat_prompt_size,
-                                    "chat_generation_attempts": chat_generation_attempts},
-                  "name1": name1,
-                  "name2": name2,
-                  "context": context,
-                  "mode": mode,
-                  "end_of_turn": end_of_turn,
-                  "regenerate": regenerate}
+    user_input = {
+        "text": text,
+        "generate_state": {
+            "max_new_tokens": max_new_tokens,
+            "do_sample": do_sample,
+            "temperature": temperature,
+            "top_p": top_p,
+            "typical_p": typical_p,
+            "repetition_penalty": repetition_penalty,
+            "encoder_repetition_penalty": encoder_repetition_penalty,
+            "top_k": top_k,
+            "min_length": min_length,
+            "no_repeat_ngram_size": no_repeat_ngram_size,
+            "num_beams": num_beams,
+            "penalty_alpha": penalty_alpha,
+            "length_penalty": length_penalty,
+            "early_stopping": early_stopping,
+            "seed": seed,
+            "stop_at_newline": stop_at_newline,
+            "chat_prompt_size": chat_prompt_size,
+            "chat_generation_attempts": chat_generation_attempts
+        },
+        "name1": name1,
+        "name2": name2,
+        "context": context,
+        "mode": mode,
+        "end_of_turn": end_of_turn,
+        "regenerate": regenerate
+    }
 
     num = check_num_in_que(ctx)
     if num >=10:
-        await ctx.send(f'{ctx.message.author.mention} you have 10 items in queue, please allow your requests to finish before adding more to the queue.')
+        await ctx.send(f'{ctx.message.author.mention} You have 10 items in queue, please allow your requests to finish before adding more to the queue.')
     else:
-        global loop
-        loop = asyncio.get_running_loop()
         que(ctx, user_input)
         reaction_list = [":thumbsup:", ":laughing:", ":wink:", ":heart:", ":pray:", ":100:", ":sloth:", ":snake:"]
         reaction_choice = reaction_list[random.randrange(8)]
         await ctx.send(f'{ctx.message.author.mention} {reaction_choice} Processing reply...')
-        if blocking:
-            logging.warning("reply blocking")
-        else:
-            await ll_gen(ctx, queues)
+        if not blocking:
+            await llm_gen(ctx, queues)
 
 @client.hybrid_command(description="Reset the conversation with LLaMA")
 @app_commands.describe(
@@ -218,7 +207,7 @@ async def status(ctx):
     total_num_queued_jobs = len(queues)
     que_user_ids = [list(a.keys())[0] for a in queues]
     if ctx.message.author.mention in que_user_ids:
-        user_position = que_user_ids.index(ctx.message.author.mention)+1
+        user_position = que_user_ids.index(ctx.message.author.mention) + 1
         msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 20/60} minutes.'
     else:
         msg = f'{ctx.message.author.mention} doesn\'t have a job queued.'
@@ -226,5 +215,15 @@ async def status(ctx):
     status_embed.timestamp = datetime.now() - timedelta(hours=3)
     status_embed.description = msg
     await ctx.send(embed=status_embed)
+
+def que(ctx, user_input):
+    user_id = ctx.message.author.mention
+    queues.append({user_id:user_input})
+    logging.info(f'reply requested: "{user_id}: {user_input}"')
+
+def check_num_in_que(ctx):
+    user = ctx.message.author.mention
+    user_list_in_que = [list(i.keys())[0] for i in queues]
+    return user_list_in_que.count(user)
 
 client.run(TOKEN, root_logger=True)

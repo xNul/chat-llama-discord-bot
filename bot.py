@@ -113,7 +113,7 @@ async def ll_gen(ctx, queues):
             msg_to_user = last_resp + ":arrows_counterclockwise:"
             
             # Prevents the embed character limit error
-            if len(last_resp) > 1024:
+            if len(msg_to_user) > 1024:
                 last_resp = last_resp[:1024]
                 break
             

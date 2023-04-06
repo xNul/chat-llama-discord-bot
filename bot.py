@@ -148,30 +148,30 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
         context = prompt
     
     user_input = {"text": text,
-                  "max_new_tokens": max_new_tokens,
-                  "do_sample": do_sample,
-                  "temperature": temperature,
-                  "top_p": top_p,
-                  "typical_p": typical_p,
-                  "repetition_penalty": repetition_penalty,
-                  "encoder_repetition_penalty": encoder_repetition_penalty,
-                  "top_k": top_k,
-                  "min_length": min_length,
-                  "no_repeat_ngram_size": no_repeat_ngram_size,
-                  "num_beams": num_beams,
-                  "penalty_alpha": penalty_alpha,
-                  "length_penalty": length_penalty,
-                  "early_stopping": early_stopping,
-                  "seed": seed,
+                  "generate_state": {"max_new_tokens": max_new_tokens,
+                                    "do_sample": do_sample,
+                                    "temperature": temperature,
+                                    "top_p": top_p,
+                                    "typical_p": typical_p,
+                                    "repetition_penalty": repetition_penalty,
+                                    "encoder_repetition_penalty": encoder_repetition_penalty,
+                                    "top_k": top_k,
+                                    "min_length": min_length,
+                                    "no_repeat_ngram_size": no_repeat_ngram_size,
+                                    "num_beams": num_beams,
+                                    "penalty_alpha": penalty_alpha,
+                                    "length_penalty": length_penalty,
+                                    "early_stopping": early_stopping,
+                                    "seed": seed,
+                                    "stop_at_newline": stop_at_newline,
+                                    "chat_prompt_size": chat_prompt_size,
+                                    "chat_generation_attempts": chat_generation_attempts},
                   "name1": name1,
                   "name2": name2,
                   "context": context,
-                  "stop_at_newline": stop_at_newline,
-                  "chat_prompt_size": chat_prompt_size,
-                  "chat_generation_attempts": chat_generation_attempts,
-                  "regenerate": regenerate,
                   "mode": mode,
-                  "end_of_turn": end_of_turn}
+                  "end_of_turn": end_of_turn,
+                  "regenerate": regenerate}
 
     num = check_num_in_que(ctx)
     if num >=10:
@@ -219,7 +219,7 @@ async def status(ctx):
     que_user_ids = [list(a.keys())[0] for a in queues]
     if ctx.message.author.mention in que_user_ids:
         user_position = que_user_ids.index(ctx.message.author.mention)+1
-        msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 3/60} minutes.'
+        msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 20/60} minutes.'
     else:
         msg = f'{ctx.message.author.mention} doesn\'t have a job queued.'
 

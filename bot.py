@@ -9,7 +9,7 @@ import torch
 
 from modules.chat import chatbot_wrapper, clear_chat_log
 from modules import shared
-shared.args.cai_chat = True
+shared.args.chat = True
 from modules.LoRA import add_lora_to_model
 from modules.models import load_model
 
@@ -94,19 +94,16 @@ async def ll_gen(ctx, queues):
         user_input = queues.pop(0)
         mention = list(user_input.keys())[0]
         user_input = user_input[mention]
-        user_input["name1"] = your_name
-        user_input["name2"] = llamas_name
-        user_input["context"] = prompt
-        user_input["check"] = False
         
         # Prevents the embed character limit error
         embed_user_input_text = user_input["text"]
         if len(user_input["text"]) > 1024:
             embed_user_input_text = user_input["text"][:1021] + "..."
         
-        reply_embed.set_field_at(index=0, name=your_name, value=embed_user_input_text, inline=False)
+        reply_embed.set_field_at(index=0, name=user_input["name1"], value=embed_user_input_text, inline=False)
         reply_embed.title = "Reply #" + str(reply_count)
         reply_embed.timestamp = datetime.now() - timedelta(hours=3)
+        reply_embed.set_field_at(index=1, name=user_input["name2"], value=":arrows_counterclockwise:", inline=False)
         
         msg = await ctx.send(embed=reply_embed)
         last_resp = ""
@@ -120,11 +117,11 @@ async def ll_gen(ctx, queues):
                 last_resp = last_resp[:1024]
                 break
             
-            reply_embed.set_field_at(index=1, name=llamas_name, value=msg_to_user, inline=False)
+            reply_embed.set_field_at(index=1, name=user_input["name2"], value=msg_to_user, inline=False)
             await msg.edit(embed=reply_embed)
         
         logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
-        reply_embed.set_field_at(index=1, name=llamas_name, value=last_resp, inline=False)
+        reply_embed.set_field_at(index=1, name=user_input["name2"], value=last_resp, inline=False)
         await msg.edit(embed=reply_embed)
         await ll_gen(ctx, queues)
     else:
@@ -141,8 +138,15 @@ def check_num_in_que(ctx):
     return user_list_in_que.count(user)
 
 @client.hybrid_command(description="Reply to LLaMA")
-@app_commands.describe(text="Text")
-async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99, top_p=0.18, typical_p=1, repetition_penalty=1.15, encoder_repetition_penalty=1, top_k=30, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, seed=-1.0, chat_prompt_size=2048, chat_generation_attempts=1, regenerate=False):
+@app_commands.describe(text="Your reply")
+async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99, top_p=0.18, typical_p=1, repetition_penalty=1.15, encoder_repetition_penalty=1, top_k=30, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, seed=-1.0, name1=None, name2=None, context=None, stop_at_newline=False, chat_prompt_size=2048, chat_generation_attempts=1, regenerate=False, mode="cai-chat", end_of_turn=""):
+    if name1 is None:
+        name1 = your_name
+    if name2 is None:
+        name2 = llamas_name
+    if context is None:
+        context = prompt
+    
     user_input = {"text": text,
                   "max_new_tokens": max_new_tokens,
                   "do_sample": do_sample,
@@ -159,9 +163,15 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=1.99,
                   "length_penalty": length_penalty,
                   "early_stopping": early_stopping,
                   "seed": seed,
+                  "name1": name1,
+                  "name2": name2,
+                  "context": context,
+                  "stop_at_newline": stop_at_newline,
                   "chat_prompt_size": chat_prompt_size,
                   "chat_generation_attempts": chat_generation_attempts,
-                  "regenerate": regenerate}
+                  "regenerate": regenerate,
+                  "mode": mode,
+                  "end_of_turn": end_of_turn}
 
     num = check_num_in_que(ctx)
     if num >=10:
@@ -196,7 +206,7 @@ async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new
     reply_count = 0
     
     shared.stop_everything = True
-    clear_chat_log(your_name, llamas_name)
+    clear_chat_log(your_name, llamas_name, "", "")
     
     logging.info("conversation reset: {'replies': " + str(reply_count) + ", 'your_name': '" + your_name + "', 'llamas_name': '" + llamas_name + "', 'prompt': '" + prompt + "'}")
     reset_embed.timestamp = datetime.now() - timedelta(hours=3)

@@ -35,9 +35,9 @@ from modules.models import load_model
 
 TOKEN = "<token here>"
 
-prompt = "This is a conversation between two people."
-your_name = "Person 1"
-llamas_name = "Person 2"
+prompt = "This is a conversation with your Assistant. The Assistant is very helpful and is eager to chat with you and answer your questions."
+your_name = "You"
+llamas_name = "Assistant"
 
 reply_embed_json = {
     "title": "Reply #X",

@@ -7,6 +7,26 @@ from discord.ext import commands
 from discord import app_commands
 import torch
 
+# Intercept custom bot arguments
+import sys
+bot_arg_list = ["--limit-history", "--token"]
+bot_argv = []
+for arg in bot_arg_list:
+    try:
+        index = sys.argv.index(arg)
+    except:
+        index = None
+    
+    if index is not None:
+        bot_argv.append(sys.argv.pop(index))
+        bot_argv.append(sys.argv.pop(index))
+
+import argparse
+parser = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=54))
+parser.add_argument("--token", type=str, help="Discord bot token to use their API.")
+parser.add_argument("--limit-history", type=int, help="When the history gets too large, performance issues can occur. Limit the history to improve performance.")
+bot_args = parser.parse_args(bot_argv)
+
 from modules.chat import chatbot_wrapper, clear_chat_log
 from modules import shared
 shared.args.chat = True
@@ -117,6 +137,11 @@ async def llm_gen(ctx, queues):
         logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
         reply_embed.set_field_at(index=1, name=user_input["name2"], value=last_resp, inline=False)
         await msg.edit(embed=reply_embed)
+        
+        if bot_args.limit_history is not None and len(shared.history['visible']) > bot_args.limit_history:
+            shared.history['visible'].pop(0)
+            shared.history['internal'].pop(0)
+        
         await llm_gen(ctx, queues)
     else:
         blocking = False
@@ -226,4 +251,4 @@ def check_num_in_que(ctx):
     user_list_in_que = [list(i.keys())[0] for i in queues]
     return user_list_in_que.count(user)
 
-client.run(TOKEN, root_logger=True)
+client.run(bot_args.token if bot_args.token else TOKEN, root_logger=True)

@@ -88,8 +88,9 @@ Note: The last command is compiling C++ files for Nvidia's CUDA compiler so it n
 ### Downloading Normal & 8bit LLaMA Models
 
 1. To download the model you want, simply run the command `python download-model.py decapoda-research/llama-Xb-hf` where `X` is the size of the model you want to download like `7` or `13`.
-2. Once downloaded, you have to fix the outdated config of the model. Open `models/llama-Xb-hf/tokenizer_config.json` and change `LLaMATokenizer` to `LlamaTokenizer`.
-3. If you only want to run a normal or 8bit model, you're done. If you want to run a 4bit model, continue onto the next section.
+2. Rename `models/decapoda-research_llama-Xb-hf` to `models/llama-Xb-hf`.
+3. Once downloaded, you have to fix the outdated config of the model. Open `models/llama-Xb-hf/tokenizer_config.json` and change `LLaMATokenizer` to `LlamaTokenizer`.
+4. If you only want to run a normal or 8bit model, you're done. If you want to run a 4bit model, continue onto the next section.
 
 ### Downloading 4bit LLaMA Models
 

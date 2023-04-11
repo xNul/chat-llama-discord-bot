@@ -153,7 +153,7 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=0.7, top_p=0.1, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, top_k=40, min_length=0, no_repeat_ngram_size=0, num_beams=1, penalty_alpha=0, length_penalty=1, early_stopping=False, seed=-1.0, name1=None, name2=None, context=None, stop_at_newline=False, chat_prompt_size=2048, chat_generation_attempts=1, regenerate=False, mode="cai-chat", end_of_turn=""):
+async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p=1.0, repetition_penalty=1.18, encoder_repetition_penalty=1, top_k=40, num_beams=1, penalty_alpha=0, min_length=0, length_penalty=1, no_repeat_ngram_size=0, early_stopping=False, max_new_tokens=200, seed=-1, stop_at_newline=False, chat_prompt_size=2048, chat_generation_attempts=1, name1=None, name2=None, context=None, mode="cai-chat", end_of_turn="", regenerate=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
@@ -164,7 +164,6 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=0.7, 
     user_input = {
         "text": text,
         "generate_state": {
-            "max_new_tokens": max_new_tokens,
             "do_sample": do_sample,
             "temperature": temperature,
             "top_p": top_p,
@@ -172,12 +171,13 @@ async def reply(ctx, text, max_new_tokens=200, do_sample=True, temperature=0.7, 
             "repetition_penalty": repetition_penalty,
             "encoder_repetition_penalty": encoder_repetition_penalty,
             "top_k": top_k,
-            "min_length": min_length,
-            "no_repeat_ngram_size": no_repeat_ngram_size,
             "num_beams": num_beams,
             "penalty_alpha": penalty_alpha,
+            "min_length": min_length,
             "length_penalty": length_penalty,
+            "no_repeat_ngram_size": no_repeat_ngram_size,
             "early_stopping": early_stopping,
+            "max_new_tokens": max_new_tokens,
             "seed": seed,
             "stop_at_newline": stop_at_newline,
             "chat_prompt_size": chat_prompt_size,

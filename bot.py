@@ -153,7 +153,7 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p=1.0, repetition_penalty=1.18, encoder_repetition_penalty=1, top_k=40, num_beams=1, penalty_alpha=0, min_length=0, length_penalty=1, no_repeat_ngram_size=0, early_stopping=False, max_new_tokens=200, seed=-1, stop_at_newline=False, chat_prompt_size=2048, chat_generation_attempts=1, name1=None, name2=None, context=None, mode="cai-chat", end_of_turn="", regenerate=False):
+async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p=1.0, repetition_penalty=1.18, encoder_repetition_penalty=1, top_k=40, num_beams=1, penalty_alpha=0, length_penalty=1, no_repeat_ngram_size=0, early_stopping=False, add_bos_token=True, max_new_tokens=200, seed=-1, stop_at_newline=False, chat_generation_attempts=1, name1=None, name2=None, context=None, mode="cai-chat", end_of_turn="", regenerate=False, _continue=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
@@ -161,6 +161,7 @@ async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p
     if context is None:
         context = prompt
     
+    # Not all parameters can be given as arguments. The Discord API has a limit of 25 arguments.
     user_input = {
         "text": text,
         "generate_state": {
@@ -173,14 +174,15 @@ async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p
             "top_k": top_k,
             "num_beams": num_beams,
             "penalty_alpha": penalty_alpha,
-            "min_length": min_length,
+            "min_length": 0,
             "length_penalty": length_penalty,
             "no_repeat_ngram_size": no_repeat_ngram_size,
             "early_stopping": early_stopping,
+            "add_bos_token": add_bos_token,
             "max_new_tokens": max_new_tokens,
             "seed": seed,
             "stop_at_newline": stop_at_newline,
-            "chat_prompt_size": chat_prompt_size,
+            "chat_prompt_size": 2048,
             "chat_generation_attempts": chat_generation_attempts
         },
         "name1": name1,
@@ -188,7 +190,8 @@ async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p
         "context": context,
         "mode": mode,
         "end_of_turn": end_of_turn,
-        "regenerate": regenerate
+        "regenerate": regenerate,
+        "_continue": _continue
     }
 
     num = check_num_in_que(ctx)

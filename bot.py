@@ -114,10 +114,10 @@ async def llm_gen(ctx, queues):
         if len(user_input["text"]) > 1024:
             embed_user_input_text = user_input["text"][:1021] + "..."
         
-        reply_embed.set_field_at(index=0, name=user_input["name1"], value=embed_user_input_text, inline=False)
+        reply_embed.set_field_at(index=0, name=user_input["state"]["name1"], value=embed_user_input_text, inline=False)
         reply_embed.title = "Reply #" + str(reply_count)
         reply_embed.timestamp = datetime.now() - timedelta(hours=3)
-        reply_embed.set_field_at(index=1, name=user_input["name2"], value=":arrows_counterclockwise:", inline=False)
+        reply_embed.set_field_at(index=1, name=user_input["state"]["name2"], value=":arrows_counterclockwise:", inline=False)
         
         msg = await ctx.send(embed=reply_embed)
         last_resp = ""
@@ -131,11 +131,11 @@ async def llm_gen(ctx, queues):
                 last_resp = last_resp[:1024]
                 break
             
-            reply_embed.set_field_at(index=1, name=user_input["name2"], value=msg_to_user, inline=False)
+            reply_embed.set_field_at(index=1, name=user_input["state"]["name2"], value=msg_to_user, inline=False)
             await msg.edit(embed=reply_embed)
         
         logging.info("reply sent: \"" + mention + ": {'text': '" + user_input["text"] + "', 'response': '" + last_resp + "'}\"")
-        reply_embed.set_field_at(index=1, name=user_input["name2"], value=last_resp, inline=False)
+        reply_embed.set_field_at(index=1, name=user_input["state"]["name2"], value=last_resp, inline=False)
         await msg.edit(embed=reply_embed)
         
         if bot_args.limit_history is not None and len(shared.history['visible']) > bot_args.limit_history:
@@ -153,7 +153,7 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p=1.0, repetition_penalty=1.18, encoder_repetition_penalty=1, top_k=40, num_beams=1, penalty_alpha=0, length_penalty=1, no_repeat_ngram_size=0, early_stopping=False, add_bos_token=True, max_new_tokens=200, seed=-1, stop_at_newline=False, chat_generation_attempts=1, name1=None, name2=None, context=None, mode="cai-chat", end_of_turn="", regenerate=False, _continue=False):
+async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string=None, name1=None, name2=None, context=None, end_of_turn="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
@@ -161,35 +161,43 @@ async def reply(ctx, text, do_sample=True, temperature=0.7, top_p=0.1, typical_p
     if context is None:
         context = prompt
     
+    custom_stopping_strings = []
+    if custom_stopping_string:
+        custom_stopping_strings = [custom_stopping_string]
+    
     # Not all parameters can be given as arguments. The Discord API has a limit of 25 arguments.
     user_input = {
         "text": text,
-        "generate_state": {
-            "do_sample": do_sample,
+        "state": {
+            "max_new_tokens": max_new_tokens,
+            "seed": seed,
             "temperature": temperature,
             "top_p": top_p,
+            "top_k": top_k,
             "typical_p": typical_p,
             "repetition_penalty": repetition_penalty,
             "encoder_repetition_penalty": encoder_repetition_penalty,
-            "top_k": top_k,
-            "num_beams": num_beams,
-            "penalty_alpha": penalty_alpha,
-            "min_length": 0,
-            "length_penalty": length_penalty,
             "no_repeat_ngram_size": no_repeat_ngram_size,
-            "early_stopping": early_stopping,
+            "min_length": 0,
+            "do_sample": do_sample,
+            "penalty_alpha": penalty_alpha,
+            "num_beams": num_beams,
+            "length_penalty": length_penalty,
+            "early_stopping": False,
             "add_bos_token": add_bos_token,
-            "max_new_tokens": max_new_tokens,
-            "seed": seed,
-            "stop_at_newline": stop_at_newline,
+            "ban_eos_token": False,
+            "truncation_length": 2048,
+            "custom_stopping_strings": custom_stopping_strings,
+            "name1": name1,
+            "name2": name2,
+            "greeting": "",
+            "context": context,
+            "end_of_turn": end_of_turn,
             "chat_prompt_size": 2048,
-            "chat_generation_attempts": chat_generation_attempts
+            "chat_generation_attempts": chat_generation_attempts,
+            "stop_at_newline": stop_at_newline,
+            "mode": mode
         },
-        "name1": name1,
-        "name2": name2,
-        "context": context,
-        "mode": mode,
-        "end_of_turn": end_of_turn,
         "regenerate": regenerate,
         "_continue": _continue
     }

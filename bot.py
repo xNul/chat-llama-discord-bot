@@ -153,17 +153,13 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string=None, name1=None, name2=None, context=None, end_of_turn="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
+async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string="", name1=None, name2=None, context=None, end_of_turn="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
         name2 = llamas_name
     if context is None:
         context = prompt
-    
-    custom_stopping_strings = []
-    if custom_stopping_string:
-        custom_stopping_strings = [custom_stopping_string]
     
     # Not all parameters can be given as arguments. The Discord API has a limit of 25 arguments.
     user_input = {
@@ -187,7 +183,7 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "add_bos_token": add_bos_token,
             "ban_eos_token": False,
             "truncation_length": 2048,
-            "custom_stopping_strings": custom_stopping_strings,
+            "custom_stopping_strings": "",
             "name1": name1,
             "name2": name2,
             "greeting": "",

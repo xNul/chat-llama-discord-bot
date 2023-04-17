@@ -125,7 +125,7 @@ elif len(available_models) == 1:
     shared.model_name = available_models[0]
 
 # Select the model from a command-line menu
-elif shared.args.model_menu:
+elif shared.model_name == "None" or shared.args.model_menu:
     if len(available_models) == 0:
         print("No models are available! Please download at least one.")
         sys.exit(0)

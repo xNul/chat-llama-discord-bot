@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 import asyncio
 import random
 import logging
+import json
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -27,11 +29,13 @@ parser.add_argument("--token", type=str, help="Discord bot token to use their AP
 parser.add_argument("--limit-history", type=int, help="When the history gets too large, performance issues can occur. Limit the history to improve performance.")
 bot_args = parser.parse_args(bot_argv)
 
+import modules.extensions as extensions_module
 from modules.chat import chatbot_wrapper, clear_chat_log
 from modules import shared
 shared.args.chat = True
 from modules.LoRA import add_lora_to_model
 from modules.models import load_model
+from server import get_available_models, get_available_extensions, get_model_specific_settings, update_model_parameters
 
 TOKEN = "<token here>"
 
@@ -84,12 +88,69 @@ status_embed_json = {
 }
 status_embed = discord.Embed().from_dict(status_embed_json)
 
-shared.model_name = shared.args.model
-shared.model, shared.tokenizer = load_model(shared.model_name)
+# Loading text-generation-webui
+# Loading custom settings
+settings_file = None
+if shared.args.settings is not None and Path(shared.args.settings).exists():
+    settings_file = Path(shared.args.settings)
+elif Path("settings.json").exists():
+    settings_file = Path("settings.json")
+if settings_file is not None:
+    print(f"Loading settings from {settings_file}...")
+    new_settings = json.loads(open(settings_file, "r").read())
+    for item in new_settings:
+        shared.settings[item] = new_settings[item]
 
-if shared.args.lora:
-    add_lora_to_model(shared.args.lora)
+# Default extensions
+extensions_module.available_extensions = get_available_extensions()
+if shared.is_chat():
+    for extension in shared.settings["chat_default_extensions"]:
+        shared.args.extensions = shared.args.extensions or []
+        if extension not in shared.args.extensions:
+            shared.args.extensions.append(extension)
+else:
+    for extension in shared.settings["default_extensions"]:
+        shared.args.extensions = shared.args.extensions or []
+        if extension not in shared.args.extensions:
+            shared.args.extensions.append(extension)
 
+available_models = get_available_models()
+
+# Model defined through --model
+if shared.args.model is not None:
+    shared.model_name = shared.args.model
+
+# Only one model is available
+elif len(available_models) == 1:
+    shared.model_name = available_models[0]
+
+# Select the model from a command-line menu
+elif shared.args.model_menu:
+    if len(available_models) == 0:
+        print("No models are available! Please download at least one.")
+        sys.exit(0)
+    else:
+        print("The following models are available:\n")
+        for i, model in enumerate(available_models):
+            print(f"{i+1}. {model}")
+        print(f"\nWhich one do you want to load? 1-{len(available_models)}\n")
+        i = int(input()) - 1
+        print()
+    shared.model_name = available_models[i]
+
+# If any model has been selected, load it
+if shared.model_name != "None":
+
+    model_settings = get_model_specific_settings(shared.model_name)
+    shared.settings.update(model_settings)  # hijacking the interface defaults
+    update_model_parameters(model_settings, initial=True)  # hijacking the command-line arguments
+
+    # Load the model
+    shared.model, shared.tokenizer = load_model(shared.model_name)
+    if shared.args.lora:
+        add_lora_to_model([shared.args.lora])
+
+# Loading the bot
 intents = discord.Intents.default()
 intents.message_content = True
 client = commands.Bot(command_prefix=".", intents=intents)

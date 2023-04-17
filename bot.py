@@ -182,6 +182,7 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "early_stopping": False,
             "add_bos_token": add_bos_token,
             "ban_eos_token": False,
+            "skip_special_tokens": True,
             "truncation_length": 2048,
             "custom_stopping_strings": "",
             "name1": name1,

@@ -1,6 +1,6 @@
 # ChatLLaMA Discord Bot
 
-A Discord Bot for chatting with LLaMA. It's not as good as ChatGPT, but LLaMA and its derivatives are pretty impressive on their own. Use `/reply` to talk to LLaMA. To clear chat history with LLaMA or change the initial prompt, use `/reset`. Sometimes LLaMA will get stuck or you will want to change the initial prompt to something more interesting so `/reset` is well used.
+A Discord Bot for chatting with LLaMA, Vicuna, Alpaca, or any other LLaMA-based model. It's not as good as ChatGPT but LLaMA and its derivatives are pretty impressive on their own. Use `/reply` to talk to LLaMA. To clear chat history with LLaMA or change the initial prompt, use `/reset`. Sometimes LLaMA will get stuck or you will want to change the initial prompt to something more interesting so `/reset` is well used.
 
 <div align="center">
   <video src="https://user-images.githubusercontent.com/894305/223963813-18e58d3c-4f9b-479c-8cdb-a2ad0df935c3.mp4" width=400/>
@@ -16,9 +16,9 @@ A Discord Bot for chatting with LLaMA. It's not as good as ChatGPT, but LLaMA an
 
 4. Place `bot.py` inside the root of the text-generation-webui directory
 
-5. Run with your text-generation-webui command but change `server.py` to `bot.py`. For example,`python bot.py --model <LLaMA model>`
+5. Run with `python bot.py`
 
-Note: For ease of use, `bot.py` supports all `server.py` model-related command line arguments.
+Note: For ease of use `bot.py` supports all `server.py` model-related command line arguments. For example, `python bot.py --model llama-7b-hf` is a valid way to start the bot.
 
 # Example Transcript
 

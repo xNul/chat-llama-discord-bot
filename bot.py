@@ -4,6 +4,10 @@ import asyncio
 import random
 import logging
 import json
+import re
+import glob
+import os
+import warnings
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -29,13 +33,16 @@ parser.add_argument("--token", type=str, help="Discord bot token to use their AP
 parser.add_argument("--limit-history", type=int, help="When the history gets too large, performance issues can occur. Limit the history to improve performance.")
 bot_args = parser.parse_args(bot_argv)
 
+os.environ["BITSANDBYTES_NOWELCOME"] = "1"
+warnings.filterwarnings("ignore", category=UserWarning, message="TypedStorage is deprecated")
+warnings.filterwarnings("ignore", category=UserWarning, message="You have modified the pretrained model configuration to control generation")
+
 import modules.extensions as extensions_module
 from modules.chat import chatbot_wrapper, clear_chat_log
 from modules import shared
 shared.args.chat = True
 from modules.LoRA import add_lora_to_model
 from modules.models import load_model
-from server import get_available_models, get_available_extensions, get_model_specific_settings, update_model_parameters
 
 TOKEN = "<token here>"
 
@@ -88,7 +95,77 @@ status_embed_json = {
 }
 status_embed = discord.Embed().from_dict(status_embed_json)
 
-# Loading text-generation-webui
+# Load text-generation-webui
+# Define functions
+def get_available_models():
+    if shared.args.flexgen:
+        return sorted([re.sub("-np$", "", item.name) for item in list(Path(f"{shared.args.model_dir}/").glob("*")) if item.name.endswith("-np")], key=str.lower)
+    else:
+        return sorted([re.sub(".pth$", "", item.name) for item in list(Path(f"{shared.args.model_dir}/").glob("*")) if not item.name.endswith((".txt", "-np", ".pt", ".json", ".yaml"))], key=str.lower)
+
+def get_available_extensions():
+    return sorted(set(map(lambda x: x.parts[1], Path("extensions").glob("*/script.py"))), key=str.lower)
+
+def get_model_specific_settings(model):
+    settings = shared.model_config
+    model_settings = {}
+
+    for pat in settings:
+        if re.match(pat.lower(), model.lower()):
+            for k in settings[pat]:
+                model_settings[k] = settings[pat][k]
+
+    return model_settings
+
+def list_model_elements():
+    elements = ["cpu_memory", "auto_devices", "disk", "cpu", "bf16", "load_in_8bit", "wbits", "groupsize", "model_type", "pre_layer"]
+    for i in range(torch.cuda.device_count()):
+        elements.append(f"gpu_memory_{i}")
+    return elements
+
+# Update the command-line arguments based on the interface values
+def update_model_parameters(state, initial=False):
+    elements = list_model_elements()  # the names of the parameters
+    gpu_memories = []
+
+    for i, element in enumerate(elements):
+        if element not in state:
+            continue
+
+        value = state[element]
+        if element.startswith("gpu_memory"):
+            gpu_memories.append(value)
+            continue
+
+        if initial and vars(shared.args)[element] != vars(shared.args_defaults)[element]:
+            continue
+
+        # Setting null defaults
+        if element in ["wbits", "groupsize", "model_type"] and value == "None":
+            value = vars(shared.args_defaults)[element]
+        elif element in ["cpu_memory"] and value == 0:
+            value = vars(shared.args_defaults)[element]
+
+        # Making some simple conversions
+        if element in ["wbits", "groupsize", "pre_layer"]:
+            value = int(value)
+        elif element == "cpu_memory" and value is not None:
+            value = f"{value}MiB"
+
+        setattr(shared.args, element, value)
+
+    found_positive = False
+    for i in gpu_memories:
+        if i > 0:
+            found_positive = True
+            break
+
+    if not (initial and vars(shared.args)["gpu_memory"] != vars(shared.args_defaults)["gpu_memory"]):
+        if found_positive:
+            shared.args.gpu_memory = [f"{i}MiB" for i in gpu_memories]
+        else:
+            shared.args.gpu_memory = None
+
 # Loading custom settings
 settings_file = None
 if shared.args.settings is not None and Path(shared.args.settings).exists():
@@ -199,9 +276,9 @@ async def llm_gen(ctx, queues):
         reply_embed.set_field_at(index=1, name=user_input["state"]["name2"], value=last_resp, inline=False)
         await msg.edit(embed=reply_embed)
         
-        if bot_args.limit_history is not None and len(shared.history['visible']) > bot_args.limit_history:
-            shared.history['visible'].pop(0)
-            shared.history['internal'].pop(0)
+        if bot_args.limit_history is not None and len(shared.history["visible"]) > bot_args.limit_history:
+            shared.history["visible"].pop(0)
+            shared.history["internal"].pop(0)
         
         await llm_gen(ctx, queues)
     else:
@@ -262,12 +339,12 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
 
     num = check_num_in_que(ctx)
     if num >=10:
-        await ctx.send(f'{ctx.message.author.mention} You have 10 items in queue, please allow your requests to finish before adding more to the queue.')
+        await ctx.send(f"{ctx.message.author.mention} You have 10 items in queue, please allow your requests to finish before adding more to the queue.")
     else:
         que(ctx, user_input)
         reaction_list = [":thumbsup:", ":laughing:", ":wink:", ":heart:", ":pray:", ":100:", ":sloth:", ":snake:"]
         reaction_choice = reaction_list[random.randrange(8)]
-        await ctx.send(f'{ctx.message.author.mention} {reaction_choice} Processing reply...')
+        await ctx.send(f"{ctx.message.author.mention} {reaction_choice} Processing reply...")
         if not blocking:
             await llm_gen(ctx, queues)
 
@@ -302,9 +379,9 @@ async def status(ctx):
     que_user_ids = [list(a.keys())[0] for a in queues]
     if ctx.message.author.mention in que_user_ids:
         user_position = que_user_ids.index(ctx.message.author.mention) + 1
-        msg = f'{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 20/60} minutes.'
+        msg = f"{ctx.message.author.mention} Your job is currently {user_position} out of {total_num_queued_jobs} in the queue. Estimated time until response is ready: {user_position * 20/60} minutes."
     else:
-        msg = f'{ctx.message.author.mention} doesn\'t have a job queued.'
+        msg = f"{ctx.message.author.mention} doesn\'t have a job queued."
 
     status_embed.timestamp = datetime.now() - timedelta(hours=3)
     status_embed.description = msg
@@ -313,7 +390,7 @@ async def status(ctx):
 def que(ctx, user_input):
     user_id = ctx.message.author.mention
     queues.append({user_id:user_input})
-    logging.info(f'reply requested: "{user_id}: {user_input}"')
+    logging.info(f"reply requested: '{user_id}: {user_input}'")
 
 def check_num_in_que(ctx):
     user = ctx.message.author.mention

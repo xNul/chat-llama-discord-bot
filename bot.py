@@ -225,7 +225,7 @@ if shared.model_name != "None":
     # Load the model
     shared.model, shared.tokenizer = load_model(shared.model_name)
     if shared.args.lora:
-        add_lora_to_model([shared.args.lora])
+        add_lora_to_model(shared.args.lora)
 
 # Loading the bot
 intents = discord.Intents.default()
@@ -291,7 +291,7 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string="", name1=None, name2=None, context=None, end_of_turn="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
+async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string="", name1=None, name2=None, context=None, turn_template="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
@@ -327,7 +327,7 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "name2": name2,
             "greeting": "",
             "context": context,
-            "end_of_turn": end_of_turn,
+            "turn_template": turn_template,
             "chat_prompt_size": 2048,
             "chat_generation_attempts": chat_generation_attempts,
             "stop_at_newline": stop_at_newline,

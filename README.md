@@ -20,7 +20,7 @@ A Discord Bot for chatting with LLaMA, Vicuna, Alpaca, or any other LLaMA-based 
 
 6. Run the bot with `python bot.py`
 
-Note: For ease of use `bot.py` supports all `server.py` model-related command line arguments. For example, `python bot.py --model llama-7b-hf` is a valid way to start the bot.
+Note: For ease of use `bot.py` supports all `server.py` model-related command line arguments listed [here](https://github.com/oobabooga/text-generation-webui#basic-settings). For example, `python bot.py --model llama-7b-hf` is a valid way to start the bot.
 
 # Example Transcript
 

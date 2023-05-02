@@ -291,7 +291,7 @@ async def on_ready():
 
 @client.hybrid_command(description="Reply to LLaMA")
 @app_commands.describe(text="Your reply")
-async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_string="", name1=None, name2=None, context=None, turn_template="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
+async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p=0.1, top_k=40, typical_p=1, repetition_penalty=1.18, encoder_repetition_penalty=1, no_repeat_ngram_size=0, do_sample=True, penalty_alpha=0, num_beams=1, length_penalty=1, add_bos_token=True, custom_stopping_strings="", name1=None, name2=None, context=None, turn_template="", chat_generation_attempts=1, stop_at_newline=False, mode="cai-chat", regenerate=False, _continue=False):
     if name1 is None:
         name1 = your_name
     if name2 is None:
@@ -322,7 +322,7 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "ban_eos_token": False,
             "skip_special_tokens": True,
             "truncation_length": 2048,
-            "custom_stopping_strings": "",
+            "custom_stopping_strings": custom_stopping_strings,
             "name1": name1,
             "name2": name2,
             "greeting": "",

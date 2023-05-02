@@ -14,11 +14,13 @@ A Discord Bot for chatting with LLaMA, Vicuna, Alpaca, or any other LLaMA-based 
 
 3. Place `bot.py` inside the text-generation-webui directory
 
-4. Open the `cmd` file that came with the one-click installer
+4. Open the `cmd_windows/linux/macos` file that came with the one-click installer
 
 5. Install discord.py with `pip install discord`
 
-6. Run the bot with `python bot.py`
+6. Navigate to the `text-generation-webui` directory with the command `cd text-generation-webui`
+
+7. Run the bot with `python bot.py`
 
 Note: For ease of use `bot.py` supports all `server.py` model-related command line arguments listed [here](https://github.com/oobabooga/text-generation-webui#basic-settings). For example, `python bot.py --model llama-7b-hf` is a valid way to start the bot.
 

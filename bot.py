@@ -331,7 +331,8 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "chat_prompt_size": 2048,
             "chat_generation_attempts": chat_generation_attempts,
             "stop_at_newline": stop_at_newline,
-            "mode": mode
+            "mode": mode,
+            "stream": True
         },
         "regenerate": regenerate,
         "_continue": _continue

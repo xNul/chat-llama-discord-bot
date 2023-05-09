@@ -331,7 +331,8 @@ async def reply(ctx, text, max_new_tokens=200, seed=-1.0, temperature=0.7, top_p
             "chat_prompt_size": 2048,
             "chat_generation_attempts": chat_generation_attempts,
             "stop_at_newline": stop_at_newline,
-            "mode": mode
+            "mode": mode,
+            "stream": True
         },
         "regenerate": regenerate,
         "_continue": _continue
@@ -366,7 +367,7 @@ async def reset(ctx, prompt_new=prompt, your_name_new=your_name, llamas_name_new
     reply_count = 0
     
     shared.stop_everything = True
-    clear_chat_log(your_name, llamas_name, "", "")
+    clear_chat_log(your_name, llamas_name, "", "","cai-chat")
     
     logging.info("conversation reset: {'replies': " + str(reply_count) + ", 'your_name': '" + your_name + "', 'llamas_name': '" + llamas_name + "', 'prompt': '" + prompt + "'}")
     reset_embed.timestamp = datetime.now() - timedelta(hours=3)

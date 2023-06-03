@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from modules.logging_colors import logger
 from threading import Lock
 import asyncio
 import random
 import json
 import re
 import copy
+import logging
 import math
 import glob
 import os
@@ -15,6 +15,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import torch
+
+logger = logging.getLogger("discord")
+logger.propagate = False
 
 # Intercept custom bot arguments
 import sys

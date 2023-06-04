@@ -14,7 +14,7 @@ A Discord Bot for chatting with LLaMA, Vicuna, Alpaca, or any other LLaMA-based 
 
 Just run the script for your operating system, follow the instructions, and ChatLLaMA will be installed to the folder.
 
-On Windows, double click the `.bat` file.
+On Windows, double click the `.bat` file.  
 On Linux/MacOS, use `bash <file name here>` from the Terminal.
 
 If there are any issues or installation questions, the [troubleshooting](https://github.com/xNul/chat-llama-discord-bot/wiki/Troubleshooting) page may be helpful.

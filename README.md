@@ -6,23 +6,18 @@ A Discord Bot for chatting with LLaMA, Vicuna, Alpaca, or any other LLaMA-based 
   <video src="https://user-images.githubusercontent.com/894305/223963813-18e58d3c-4f9b-479c-8cdb-a2ad0df935c3.mp4" width=400/>
 </div>
 
-# Setup
+# Installation
 
-1. Setup text-generation-webui with their [one-click installer](https://github.com/oobabooga/text-generation-webui#one-click-installers) and download the model you want (for example `decapoda-research/llama-7b-hf`). Make sure it's working.
+| Windows | Linux | macOS |
+|-------|--------|--------|
+| [ChatLLaMA_Windows.bat](https://github.com/xNul/chat-llama-discord-bot/releases/download/installers/ChatLLaMA_Windows.bat) | [ChatLLaMA_Linux.sh](https://github.com/xNul/chat-llama-discord-bot/releases/download/installers/ChatLLaMA_Linux.sh) |[ChatLLaMA_MacOS.sh](https://github.com/xNul/chat-llama-discord-bot/releases/download/installers/ChatLLaMA_MacOS.sh) |
 
-2. Edit `bot.py` with your Discord bot's token
+Just run the script for your operating system, follow the instructions, and ChatLLaMA will be installed to the folder.
 
-3. Place `bot.py` inside the text-generation-webui directory
+On Windows, double click the `.bat` file.
+On Linux/MacOS, use `bash <file name here>` from the Terminal.
 
-4. Open the `cmd_windows/linux/macos` file that came with the one-click installer
-
-5. Install discord.py with `pip install discord`
-
-6. Navigate to the `text-generation-webui` directory with the command `cd text-generation-webui`
-
-7. Run the bot with `python bot.py`
-
-Note: For ease of use `bot.py` supports all `server.py` model-related command line arguments listed [here](https://github.com/oobabooga/text-generation-webui#basic-settings). For example, `python bot.py --model llama-7b-hf` is a valid way to start the bot.
+If there are any issues or installation questions, the [troubleshooting](https://github.com/xNul/chat-llama-discord-bot/wiki/Troubleshooting) page may be helpful.
 
 # Example Transcript
 

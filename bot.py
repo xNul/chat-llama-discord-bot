@@ -10,6 +10,7 @@ import logging
 import math
 import glob
 import os
+import yaml
 import warnings
 import discord
 from discord.ext import commands
@@ -111,7 +112,7 @@ def get_model_specific_settings(model):
     return model_settings
 
 def list_model_elements():
-    elements = ["cpu_memory", "auto_devices", "disk", "cpu", "bf16", "load_in_8bit", "load_in_4bit", "compute_dtype", "quant_type", "use_double_quant", "wbits", "groupsize", "model_type", "pre_layer", "threads", "n_batch", "no_mmap", "mlock", "n_gpu_layers", "n_ctx", "llama_cpp_seed"]
+    elements = ["cpu_memory", "auto_devices", "disk", "cpu", "bf16", "load_in_8bit", "trust_remote_code", "load_in_4bit", "compute_dtype", "quant_type", "use_double_quant", "wbits", "groupsize", "model_type", "pre_layer", "autogptq", "triton", "desc_act", "threads", "n_batch", "no_mmap", "mlock", "n_gpu_layers", "n_ctx", "llama_cpp_seed"]
     for i in range(torch.cuda.device_count()):
         elements.append(f"gpu_memory_{i}")
 
@@ -125,9 +126,11 @@ def load_preset_values(preset_menu, state, return_dict=False):
         "typical_p": 1,
         "epsilon_cutoff": 0,
         "eta_cutoff": 0,
+        "tfs": 1,
+        "top_a": 0,
         "repetition_penalty": 1,
         "encoder_repetition_penalty": 1,
-        "top_k": 50,
+        "top_k": 0,
         "num_beams": 1,
         "penalty_alpha": 0,
         "min_length": 0,
@@ -136,15 +139,14 @@ def load_preset_values(preset_menu, state, return_dict=False):
         "early_stopping": False,
         "mirostat_mode": 0,
         "mirostat_tau": 5.0,
-        "mirostat_eta": 0.1,
+        "mirostat_eta": 0.1
     }
     
-    with open(Path(f"presets/{preset_menu}.txt"), "r") as infile:
-        preset = infile.read()
-    for i in preset.splitlines():
-        i = i.rstrip(",").strip().split("=")
-        if len(i) == 2 and i[0].strip() != "tokens":
-            generate_params[i[0].strip()] = eval(i[1].strip())
+    with open(Path(f"presets/{preset_menu}.yaml"), "r") as infile:
+        preset = yaml.safe_load(infile)
+
+    for k in preset:
+        generate_params[k] = preset[k]
     
     generate_params["temperature"] = min(1.99, generate_params["temperature"])
     if return_dict:
@@ -203,16 +205,19 @@ def update_model_parameters(state, initial=False):
 settings_file = None
 if shared.args.settings is not None and Path(shared.args.settings).exists():
     settings_file = Path(shared.args.settings)
+elif Path("settings.yaml").exists():
+    settings_file = Path("settings.yaml")
 elif Path("settings.json").exists():
     settings_file = Path("settings.json")
 
 if settings_file is not None:
     logger.info(f"Loading settings from {settings_file}...")
-    new_settings = json.loads(open(settings_file, "r").read())
+    file_contents = open(settings_file, "r", encoding="utf-8").read()
+    new_settings = json.loads(file_contents) if settings_file.suffix == "json" else yaml.safe_load(file_contents)
     for item in new_settings:
         shared.settings[item] = new_settings[item]
 
-# Set default model settings based on settings.json
+# Set default model settings based on settings file
 shared.model_config[".*"] = {
     "wbits": "None",
     "model_type": "None",
@@ -276,7 +281,7 @@ if shared.model_name != "None":
         add_lora_to_model(shared.args.lora)
 
 # Use the model parameters for LLaMA
-default_preset = shared.settings['presets'][next((k for k in shared.settings['presets'] if re.match(k.lower(), shared.model_name.lower())), 'default')]
+default_preset = shared.settings["preset"]
 preset_menu = default_preset if not shared.args.flexgen else "Naive"
 
 # Importing the extension files and executing their setup() functions
@@ -285,7 +290,7 @@ if shared.args.extensions is not None and len(shared.args.extensions) > 0:
 
 generate_model_params = load_preset_values(preset_menu, {}, return_dict=True)
 
-name1_instruct, name2_instruct, _, _, context_instruct, turn_template = load_character(shared.settings["instruction_template"], '', '', instruct=True)
+name1_instruct, name2_instruct, _, _, context_instruct, turn_template = load_character(shared.settings["instruction_template"], "", "", instruct=True)
 name1, name2, _, greeting, context, _ = load_character("None", shared.settings["name1"], shared.settings["name2"], instruct=False)
 
 # Finding the default values for the GPU and CPU memories
@@ -321,6 +326,8 @@ shared.persistent_interface_state.update({
     "typical_p": generate_model_params["typical_p"],
     "epsilon_cutoff": generate_model_params["epsilon_cutoff"],
     "eta_cutoff": generate_model_params["eta_cutoff"],
+    "tfs": generate_model_params["tfs"],
+    "top_a": generate_model_params["top_a"],
     "repetition_penalty": generate_model_params["repetition_penalty"],
     "encoder_repetition_penalty": generate_model_params["encoder_repetition_penalty"],
     "no_repeat_ngram_size": generate_model_params["no_repeat_ngram_size"],
@@ -362,6 +369,7 @@ shared.persistent_interface_state.update({
     "cpu": shared.args.cpu,
     "bf16": shared.args.bf16,
     "load_in_8bit": shared.args.load_in_8bit,
+    "trust-remote-code": shared.args.trust_remote_code,
     "load_in_4bit": shared.args.load_in_4bit,
     "compute_dtype": shared.args.compute_dtype,
     "quant_type": shared.args.quant_type,
@@ -370,6 +378,9 @@ shared.persistent_interface_state.update({
     "groupsize": shared.args.groupsize if shared.args.groupsize > 0 else "None",
     "model_type": shared.args.model_type or "None",
     "pre_layer": shared.args.pre_layer[0] if shared.args.pre_layer is not None else 0,
+    "autogptq": shared.args.autogptq,
+    "triton": shared.args.triton,
+    "desc_act": shared.args.desc_act,
     "threads": shared.args.threads,
     "n_batch": shared.args.n_batch,
     "no_mmap": shared.args.no_mmap,
@@ -454,7 +465,7 @@ async def reply(ctx, text, max_new_tokens=None, seed=None, temperature=None, top
     
     local_args = locals()
     for key, value in local_args.items():
-        if value != None and key not in ['ctx', 'text', 'regenerate', '_continue', 'persistant_interface_state_copy']:
+        if value != None and key not in ["ctx", "text", "regenerate", "_continue", "persistant_interface_state_copy"]:
             persistant_interface_state_copy[key] = value
     
     # Not all parameters can be given as arguments. The Discord API has a limit of 25 arguments.
